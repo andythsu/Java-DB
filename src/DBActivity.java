@@ -14,8 +14,11 @@ import java.util.Map;
  * Can perform DB activities (insert, delete, select ...)
  */
 public class DBActivity extends DBConnection{
-	public DBActivity() {
-		super();
+	public DBActivity(String url, String username, String password) {
+		super(url, username, password);
+	}
+	public static DBActivity connect(String url, String username, String password) {
+		return new DBActivity(url, username, password);
 	}
 	public ResultSet executeQuery(String sql) throws SQLException {
 		checkConnection();

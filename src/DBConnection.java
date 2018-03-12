@@ -9,12 +9,19 @@ import java.sql.SQLException;
  */
 
 public class DBConnection {
-	final String DBURL = "jdbc:oracle:thin://@zayom.ceoggceojobt.ca-central-1.rds.amazonaws.com:1521/zayom";
-	final String userName = "sf_core";
-	final String password = "a11stream";
+	String DBURL = "";
+	String userName = "";
+	String password = "";
 	protected Connection con;
-
-	public DBConnection() {
+	
+	public DBConnection(String url, String username, String password) {
+		this.DBURL = url;
+		this.userName = username;
+		this.password = password;
+		this.initConnection();
+	}
+	
+	private void initConnection() {
 		try {
 			// step1 load the driver class
 			loadDriver();
