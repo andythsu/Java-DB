@@ -35,8 +35,6 @@ public class DBActivity extends DBConnection {
 		} catch (SQLException e) {
 			System.out.println("error in SQL: " + e.getMessage().toString());
 			return null;
-		} finally {
-			close(null, stmt, rtn, null);
 		}
 	}
 
@@ -88,8 +86,6 @@ public class DBActivity extends DBConnection {
 		} catch (SQLException e) {
 			System.out.println("error in SQL: " + e.getMessage().toString());
 			return null;
-		} finally {
-			close(null, st, null, null);
 		}
 	}
 	
