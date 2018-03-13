@@ -1,4 +1,5 @@
 package DB;
+
 /**
  * @Author: Andy Su
  * @Date: Mar 12, 2018 
@@ -14,169 +15,252 @@ import java.util.Map;
 /**
  * Can perform DB activities (insert, delete, select ...)
  */
-public class DBActivity extends DBConnection{
+public class DBActivity extends DBConnection {
 	public DBActivity(String url, String username, String password) {
 		super(url, username, password);
 	}
+
 	public static DBActivity connect(String url, String username, String password) {
 		return new DBActivity(url, username, password);
 	}
-	public ResultSet executeQuery(String sql) throws SQLException {
+
+	public ResultSet executeQuery(String sql) {
 		checkConnection();
+		Statement stmt = null;
+		ResultSet rtn = null;
 		try {
-			Statement stmt = this.con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-			ResultSet rtn = stmt.executeQuery(sql);
+			stmt = this.con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			rtn = stmt.executeQuery(sql);
 			return rtn;
-		}catch(SQLException e) {
+		} catch (SQLException e) {
 			System.out.println("error in SQL: " + e.getMessage().toString());
 			return null;
+		} finally {
+			close(null, stmt, rtn, null);
 		}
 	}
 
 	public int executeUpdate(String sql) {
 		checkConnection();
+		Statement stmt = null;
 		try {
-			Statement stmt = this.con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-			int rtn = stmt.executeUpdate(sql);
-			stmt.close();
-			return rtn;
-		}catch(SQLException e) {
+			stmt = this.con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			return stmt.executeUpdate(sql);
+		} catch (SQLException e) {
 			System.out.println("error in SQL: " + e.getMessage().toString());
 			return -1;
+		} finally {
+			close(null, stmt, null, null);
 		}
 	}
 
-	public ResultSet select(String tableName, String[] choices, Object[][] conditions, String logic) throws SQLException {
+	public ResultSet select(String tableName, String[] choices, Object[][] conditions, String logic) {
 		String choice = choices == null ? "*" : generateValuesInParenthesis(choices, false);
 		String condition;
-		if(conditions == null) {
+		Statement st = null;
+		if (conditions == null) {
 			condition = "";
-		}else {
+		} else {
 			condition = " WHERE ";
-			for(int i=0; i<conditions.length; i++) {
-				if(i > 0) condition = condition + " " + logic + " ";
-				for(int j=0; j<conditions[i].length; j++) {
-					if(j > 0) condition = condition + " = ";
+			for (int i = 0; i < conditions.length; i++) {
+				if (i > 0)
+					condition = condition + " " + logic + " ";
+				for (int j = 0; j < conditions[i].length; j++) {
+					if (j > 0)
+						condition = condition + " = ";
 					Object value = conditions[i][j];
-					if(value instanceof Integer) {
-						condition = condition + (int)value;
-					}else if (value instanceof String) {
-						condition = condition + (String)value;
-					}else if (value instanceof Boolean) {
-						condition = condition + (Boolean)value;
-					}else if (value instanceof Double) {
-						condition = condition + (Double)value;
+					if (value instanceof Integer) {
+						condition = condition + (int) value;
+					} else if (value instanceof String) {
+						condition = condition + (String) value;
+					} else if (value instanceof Boolean) {
+						condition = condition + (Boolean) value;
+					} else if (value instanceof Double) {
+						condition = condition + (Double) value;
 					}
 				}
 			}
 		}
 		try {
 			String sql = "SELECT " + choice + " FROM " + tableName + condition;
-			Statement st = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
+			st = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 			return st.executeQuery(sql);
-		}catch(SQLException error) {
-			System.out.println("error in SQL: " + error.getMessage().toString());
+		} catch (SQLException e) {
+			System.out.println("error in SQL: " + e.getMessage().toString());
 			return null;
+		} finally {
+			close(null, st, null, null);
 		}
 	}
-
-	public int update(String tableName, String[] keys, Object[] values, String[][] condition, String intermediate) throws SQLException {
-		checkConnection();
-		String sql = "UPDATE " + tableName + " SET ";
-		sql += generateValuesForUpdate(keys, true);
-		sql += " WHERE ";
-		sql += generateConditionForUpdate(condition, intermediate);
-		PreparedStatement ps = con.prepareStatement(sql);
-		for(int i=0; i<values.length; i++) {
-			Object value = values[i];
-			if(value instanceof Integer) {
-				ps.setInt(i+1, (int)value);
-			}else if (value instanceof String) {
-				ps.setString(i+1, (String)value);
-			}else if (value instanceof Boolean) {
-				ps.setBoolean(i+1,(boolean)value);
-			}else if (value instanceof Double) {
-				ps.setDouble(i+1, (Double)value);
-			}
-		}
-		return ps.executeUpdate();
-	}
-
-
+	
 	/**
+	 * batch update, can only have 1 condition. ex: update (table) set (field) = (?) where (field) = (value)
+	 * @param tableName
+	 * @param keys
+	 * @param values
 	 * @param condition
-	 * @param 
 	 * @return
 	 */
-	private String generateConditionForUpdate(String[][] condition, String intermediate) {
-		String rtn = "";
-		if(intermediate != null && condition.length > 1) {
-			for(int i=0; i<condition.length; i++) {
-				if(i > 0) rtn += " " + intermediate + " ";
-				rtn += condition[i][0] + "=" + condition[i][1];
+	public int[] update(String tableName, String[] keys, Object[][] values, String condition_field, String[] condition_vals) {
+		checkConnection();
+		String sql = "UPDATE " + tableName + " SET ";
+		sql += generateValuesForUpdate(keys);
+		sql += " WHERE ";
+		sql += condition_field + "=?";
+		PreparedStatement ps = null;
+		try {
+			ps = con.prepareStatement(sql);
+			for(int i=0; i<values.length; i++) {
+				for(int j=0; j<values[i].length; j++) {
+					Object value = values[i][j];
+					if (value instanceof Integer) {
+						ps.setInt(j + 1, (int) value);
+					} else if (value instanceof String) {
+						ps.setString(j + 1, (String) value);
+					} else if (value instanceof Boolean) {
+						ps.setBoolean(j + 1, (boolean) value);
+					} else if (value instanceof Double) {
+						ps.setDouble(j + 1, (Double) value);
+					}
+					
+					// for the WHERE clause
+					if ((j+1) == values[i].length) {
+						ps.setString(j+2, condition_vals[i]);
+					}
+				}
+				ps.addBatch();
 			}
-		}else {
-			rtn += condition[0][0] + "=" + condition[0][1];
+			System.out.println("finished updating");
+			return ps.executeBatch();
+		}catch(SQLException e) {
+			e.printStackTrace();
+			return null;
+		}finally {
+			close(ps, null, null, null);
 		}
-		return rtn;
 	}
+	
+
+	/**
+	 * single update, can have multiple conditions. ex: update (table) set (field) = (?) where (field) = (value) OR/AND (field2) = (value2) ...
+	 * @param tableName
+	 * @param keys
+	 * @param values
+	 * @param condition
+	 * @param intermediate
+	 * @return
+	 */
+	public int update(String tableName, String[] keys, Object[] values, String[][] condition, String intermediate) {
+		checkConnection();
+		String sql = "UPDATE " + tableName + " SET ";
+		sql += generateValuesForUpdate(keys);
+		sql += " WHERE ";
+		sql += generateConditionForUpdate(condition, intermediate);
+		PreparedStatement ps = null;
+		try {
+			ps = con.prepareStatement(sql);
+			for (int i = 0; i < values.length; i++) {
+				Object value = values[i];
+				if (value instanceof Integer) {
+					ps.setInt(i + 1, (int) value);
+				} else if (value instanceof String) {
+					ps.setString(i + 1, (String) value);
+				} else if (value instanceof Boolean) {
+					ps.setBoolean(i + 1, (boolean) value);
+				} else if (value instanceof Double) {
+					ps.setDouble(i + 1, (Double) value);
+				}
+			}
+			System.out.println("finished updating");
+			return ps.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("error in updating");
+			return -1;
+		} finally {
+			close(ps, null, null, null);
+		}
+
+	}
+
+	/**
+	 * called by client class to close connection object
+	 */
+	public void close() {
+		close(null, null, null, this.con);
+	}
+
+	
+
 	// single insert
-	public void insert(String tableName, String[] keys, Object[] values) throws SQLException {
+	public int[] insert(String tableName, String[] keys, Object[] values) {
 		checkConnection();
 		String sql = "INSERT INTO " + tableName;
 		sql = sql + "(" + generateValuesInParenthesis(keys, false) + ")";
 		sql = sql + " VALUES ";
 		sql = sql + "(" + generateValuesInParenthesis(keys, true) + ")";
-		PreparedStatement ps = con.prepareStatement(sql);
-		for(int j=0; j<values.length; j++) {
-			Object value = values[j];
-			if(value instanceof Integer) {
-				ps.setInt(j+1, (int)value);
-			}else if (value instanceof String) {
-				ps.setString(j+1, (String)value);
-			}else if (value instanceof Boolean) {
-				ps.setBoolean(j+1,(boolean)value);
-			}else if (value instanceof Double) {
-				ps.setDouble(j+1, (Double)value);
-			}
-		}
-		ps.addBatch();
-		ps.executeBatch();
-		System.out.println("inserted successfully");
-		ps.close();
-	}
-	// multiple insert
-	public void insert(String tableName, String[] keys, Object[][] values) throws SQLException {
-		checkConnection();
-		String sql = "INSERT INTO " + tableName;
-		sql = sql + "(" + generateValuesInParenthesis(keys, false) + ")";
-		sql = sql + " VALUES ";
-		sql = sql + "(" + generateValuesInParenthesis(keys, true) + ")";
-		PreparedStatement ps = con.prepareStatement(sql);
-		for(int i=0; i<values.length; i++) {
-			for(int j=0; j<values[i].length; j++) {
-				Object value = values[i][j];
-				if(value instanceof Integer) {
-					ps.setInt(j+1, (int)value);
-				}else if (value instanceof String) {
-					ps.setString(j+1, (String)value);
-				}else if (value instanceof Boolean) {
-					ps.setBoolean(j+1,(boolean)value);
-				}else if (value instanceof Double) {
-					ps.setDouble(j+1, (Double)value);
+		PreparedStatement ps = null;
+		try {
+			ps = con.prepareStatement(sql);
+			for (int j = 0; j < values.length; j++) {
+				Object value = values[j];
+				if (value instanceof Integer) {
+					ps.setInt(j + 1, (int) value);
+				} else if (value instanceof String) {
+					ps.setString(j + 1, (String) value);
+				} else if (value instanceof Boolean) {
+					ps.setBoolean(j + 1, (boolean) value);
+				} else if (value instanceof Double) {
+					ps.setDouble(j + 1, (Double) value);
 				}
 			}
 			ps.addBatch();
-			System.out.println("adding..." + i);
+			return ps.executeBatch();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			close(ps, null, null, null);
 		}
-		ps.executeBatch();
-		System.out.println("inserted successfully");
-		ps.close();
+	}
+
+	// multiple insert
+	public int[] insert(String tableName, String[] keys, Object[][] values) {
+		checkConnection();
+		String sql = "INSERT INTO " + tableName;
+		sql = sql + "(" + generateValuesInParenthesis(keys, false) + ")";
+		sql = sql + " VALUES ";
+		sql = sql + "(" + generateValuesInParenthesis(keys, true) + ")";
+		PreparedStatement ps = null;
+		try {
+			ps = con.prepareStatement(sql);
+			for (int i = 0; i < values.length; i++) {
+				for (int j = 0; j < values[i].length; j++) {
+					Object value = values[i][j];
+					if (value instanceof Integer) {
+						ps.setInt(j + 1, (int) value);
+					} else if (value instanceof String) {
+						ps.setString(j + 1, (String) value);
+					} else if (value instanceof Boolean) {
+						ps.setBoolean(j + 1, (boolean) value);
+					} else if (value instanceof Double) {
+						ps.setDouble(j + 1, (Double) value);
+					}
+				}
+				ps.addBatch();
+				System.out.println("adding..." + i);
+			}
+			return ps.executeBatch();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			close(ps, null, null, null);
+		}
 	}
 
 	public int getRowCount(ResultSet r) throws SQLException {
 		int total = -1;
-		while(r.next()) {
+		while (r.next()) {
 			r.last();
 			total = r.getRow();
 		}
@@ -187,14 +271,34 @@ public class DBActivity extends DBConnection{
 	/* helper methods */
 
 	/**
-	 * @param keys
-	 * @param b
+	 * @param condition
+	 * @param
 	 * @return
 	 */
-	private String generateValuesForUpdate(String[] keys, boolean b) {
+	private String generateConditionForUpdate(String[][] condition, String intermediate) {
 		String rtn = "";
-		for(int i=0; i<keys.length; i++) {
-			if(i > 0) rtn += ", ";
+		if (intermediate != null && condition.length > 1) {
+			for (int i = 0; i < condition.length; i++) {
+				if (i > 0)
+					rtn += " " + intermediate + " ";
+				rtn += condition[i][0] + "=" + condition[i][1];
+			}
+		} else {
+			rtn += condition[0][0] + "=" + condition[0][1];
+		}
+		return rtn;
+	}
+	
+	/**
+	 * @param keys
+	 * @param question_mark
+	 * @return
+	 */
+	private String generateValuesForUpdate(String[] keys) {
+		String rtn = "";
+		for (int i = 0; i < keys.length; i++) {
+			if (i > 0)
+				rtn += ", ";
 			rtn += keys[i] + "=" + "?";
 		}
 		return rtn;
@@ -202,25 +306,63 @@ public class DBActivity extends DBConnection{
 
 	private String generateValuesInParenthesis(Object[] keys, boolean includeQuestionMark) {
 		String rtn = "";
-		if(includeQuestionMark) {
-			for(int i=0; i<keys.length; i++) {
-				if(i > 0) rtn = rtn + ", ";
+		if (includeQuestionMark) {
+			for (int i = 0; i < keys.length; i++) {
+				if (i > 0)
+					rtn = rtn + ", ";
 				rtn = rtn + "?";
 			}
-		}else {
-			for(int i=0; i<keys.length; i++) {
-				if(i > 0) rtn = rtn + ", ";
+		} else {
+			for (int i = 0; i < keys.length; i++) {
+				if (i > 0)
+					rtn = rtn + ", ";
 				rtn = rtn + keys[i];
 			}
 		}
-		return (String)rtn;
+		return (String) rtn;
+	}
+	
+	/**
+	 * @param ps
+	 * @param resultset
+	 * @param connection
+	 */
+	private void close(PreparedStatement ps, Statement st, ResultSet rs, Connection con) {
+		if (ps != null) {
+			try {
+				ps.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		if (rs != null) {
+			try {
+				rs.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		if (st != null) {
+			try {
+				st.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		if (con != null) {
+			try {
+				con.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
+
 	private void checkConnection() {
-		if(this.con == null) {
+		if (this.con == null) {
 			System.out.println("error connecting to database");
 			System.exit(0);
 		}
 	}
 }
-
