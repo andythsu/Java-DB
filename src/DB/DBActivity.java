@@ -16,7 +16,7 @@ import java.util.Map;
  * Can perform DB activities (insert, delete, select ...)
  */
 public class DBActivity extends DBConnection {
-	public DBActivity(String url, String username, String password) {
+	private DBActivity(String url, String username, String password) {
 		super(url, username, password);
 	}
 
