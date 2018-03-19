@@ -253,6 +253,16 @@ public class DBActivity extends DBConnection {
 			close(ps, null, null, null);
 		}
 	}
+	
+	public int getRowCount(String tableName) throws SQLException{
+		String sql = "select count(*) AS cnt from " + tableName;
+		ResultSet r = executeQuery(sql);
+		String totalCount = "0";
+		while(r.next()) {
+			totalCount = r.getString("cnt");
+		}
+		return Integer.parseInt(totalCount);
+	}
 
 	public int getRowCount(ResultSet r) throws SQLException {
 		int total = -1;
