@@ -35,7 +35,7 @@ public class DBActivity extends DBConnection {
 		} catch (SQLException e) {
 			System.out.println("error in SQL: " + e.getMessage().toString());
 			return null;
-		}
+		} 
 	}
 
 	public int executeUpdate(String sql) {
@@ -186,7 +186,6 @@ public class DBActivity extends DBConnection {
 	}
 
 	
-
 	// single insert
 	public int[] insert(String tableName, String[] keys, Object[] values) {
 		checkConnection();
@@ -219,7 +218,7 @@ public class DBActivity extends DBConnection {
 		}
 	}
 
-	// multiple insert
+	// batch insert
 	public int[] insert(String tableName, String[] keys, Object[][] values) {
 		checkConnection();
 		String sql = "INSERT INTO " + tableName;
@@ -254,6 +253,13 @@ public class DBActivity extends DBConnection {
 		}
 	}
 	
+	
+	/**
+	 * SQL approach to get row count
+	 * @param tableName
+	 * @return
+	 * @throws SQLException
+	 */
 	public int getRowCount(String tableName) throws SQLException{
 		String sql = "select count(*) AS cnt from " + tableName;
 		ResultSet r = executeQuery(sql);
@@ -264,6 +270,12 @@ public class DBActivity extends DBConnection {
 		return Integer.parseInt(totalCount);
 	}
 
+	/**
+	 * ResultSet approach to get row count
+	 * @param r
+	 * @return
+	 * @throws SQLException
+	 */
 	public int getRowCount(ResultSet r) throws SQLException {
 		int total = -1;
 		while (r.next()) {
@@ -329,6 +341,7 @@ public class DBActivity extends DBConnection {
 	}
 	
 	/**
+	 * Close all existing connections
 	 * @param ps
 	 * @param resultset
 	 * @param connection
@@ -364,7 +377,9 @@ public class DBActivity extends DBConnection {
 		}
 	}
 
-
+	/**
+	 * check connection status
+	 */
 	private void checkConnection() {
 		if (this.con == null) {
 			System.out.println("error connecting to database");
