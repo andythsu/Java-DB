@@ -1,4 +1,4 @@
-package DB;
+package Oracle_DB;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -81,9 +81,7 @@ public class DBConnection {
 		try {
 			Class.forName("oracle.jdbc.driver.OracleDriver");
 		} catch (ClassNotFoundException c) {
-			System.out.println("Exception- Class failed to load:" + "oracle.jdbc.driver.OracleDriver");
 			System.out.println(c);
-			System.out.println("Terminating. . .");
 		}
 	}
 }
