@@ -1,4 +1,4 @@
-package Oracle_DB;
+package DB;
 
 /**
  * @Author: Andy Su
@@ -15,79 +15,22 @@ import java.util.Map;
 /**
  * Can perform DB activities (insert, delete, select ...)
  */
-public class DBActivity extends DBConnection {
-	private DBActivity(String url, String username, String password) {
-		super(url, username, password);
-	}
+public abstract class DBActivity extends DBConnection {
 
-	public static DBActivity connect(String url, String username, String password) {
-		return new DBActivity(url, username, password);
+	/**
+	 * @param url
+	 * @param username
+	 * @param password
+	 */
+	public DBActivity(String url, String username, String password, String driver) {
+		super(url, username, password, driver);
 	}
+	
+	public abstract ResultSet executeQuery(String sql);	
 
-	public ResultSet executeQuery(String sql) {
-		checkConnection();
-		Statement stmt = null;
-		ResultSet rtn = null;
-		try {
-			stmt = this.con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-			rtn = stmt.executeQuery(sql);
-			return rtn;
-		} catch (SQLException e) {
-			System.out.println("error in SQL: " + e.getMessage().toString());
-			return null;
-		} 
-	}
+	public abstract int executeUpdate(String sql);
 
-	public int executeUpdate(String sql) {
-		checkConnection();
-		Statement stmt = null;
-		try {
-			stmt = this.con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-			return stmt.executeUpdate(sql);
-		} catch (SQLException e) {
-			System.out.println("error in SQL: " + e.getMessage().toString());
-			return -1;
-		} finally {
-			close(null, stmt, null, null);
-		}
-	}
-
-	public ResultSet select(String tableName, String[] choices, Object[][] conditions, String logic) {
-		String choice = choices == null ? "*" : generateValuesInParenthesis(choices, false);
-		String condition;
-		Statement st = null;
-		if (conditions == null) {
-			condition = "";
-		} else {
-			condition = " WHERE ";
-			for (int i = 0; i < conditions.length; i++) {
-				if (i > 0)
-					condition = condition + " " + logic + " ";
-				for (int j = 0; j < conditions[i].length; j++) {
-					if (j > 0)
-						condition = condition + " = ";
-					Object value = conditions[i][j];
-					if (value instanceof Integer) {
-						condition = condition + (int) value;
-					} else if (value instanceof String) {
-						condition = condition + (String) value;
-					} else if (value instanceof Boolean) {
-						condition = condition + (Boolean) value;
-					} else if (value instanceof Double) {
-						condition = condition + (Double) value;
-					}
-				}
-			}
-		}
-		try {
-			String sql = "SELECT " + choice + " FROM " + tableName + condition;
-			st = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-			return st.executeQuery(sql);
-		} catch (SQLException e) {
-			System.out.println("error in SQL: " + e.getMessage().toString());
-			return null;
-		}
-	}
+	public abstract ResultSet select(String tableName, String[] choices, Object[][] conditions, String logic);
 	
 	/**
 	 * batch update, can only have 1 condition. ex: update (table) set (field) = (?) where (field) = (value)
@@ -312,7 +255,7 @@ public class DBActivity extends DBConnection {
 	 * @param question_mark
 	 * @return
 	 */
-	private String generateValuesForUpdate(String[] keys) {
+	protected String generateValuesForUpdate(String[] keys) {
 		String rtn = "";
 		for (int i = 0; i < keys.length; i++) {
 			if (i > 0)
@@ -322,7 +265,7 @@ public class DBActivity extends DBConnection {
 		return rtn;
 	}
 
-	private String generateValuesInParenthesis(Object[] keys, boolean includeQuestionMark) {
+	protected String generateValuesInParenthesis(Object[] keys, boolean includeQuestionMark) {
 		String rtn = "";
 		if (includeQuestionMark) {
 			for (int i = 0; i < keys.length; i++) {
@@ -346,7 +289,7 @@ public class DBActivity extends DBConnection {
 	 * @param resultset
 	 * @param connection
 	 */
-	private void close(PreparedStatement ps, Statement st, ResultSet rs, Connection con) {
+	protected void close(PreparedStatement ps, Statement st, ResultSet rs, Connection con) {
 		if (ps != null) {
 			try {
 				ps.close();
@@ -380,7 +323,7 @@ public class DBActivity extends DBConnection {
 	/**
 	 * check connection status
 	 */
-	private void checkConnection() {
+	protected void checkConnection() {
 		if (this.con == null) {
 			System.out.println("error connecting to database");
 			System.exit(0);

@@ -1,4 +1,4 @@
-package Oracle_DB;
+package DB;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -13,12 +13,14 @@ public class DBConnection {
 	String DBURL = "";
 	String userName = "";
 	String password = "";
+	String driver = "";
 	protected Connection con;
 	
-	public DBConnection(String url, String username, String password) {
+	public DBConnection(String url, String username, String password, String driver) {
 		this.DBURL = url;
 		this.userName = username;
 		this.password = password;
+		this.driver = driver;
 		this.initConnection();
 	}
 	
@@ -79,7 +81,7 @@ public class DBConnection {
 
 	private void loadDriver() {
 		try {
-			Class.forName("oracle.jdbc.driver.OracleDriver");
+			Class.forName(this.driver);
 		} catch (ClassNotFoundException c) {
 			System.out.println(c);
 		}
