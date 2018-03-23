@@ -15,8 +15,8 @@ public class Main {
 	static String sql_user = "";
 	static String sql_pass = "";
 	
-	static DBActivity sql = SQLActivity.create(sql_url, sql_user, sql_pass); // creates connection for SQL server
-	static DBActivity oracle = OracleActivity.create(oracle_url, oracle_user, oracle_pass); // creates connection for Oracle
+	static DBActivity sql = SQLActivity.connect(sql_url, sql_user, sql_pass); // creates connection for SQL server
+	static DBActivity oracle = OracleActivity.connect(oracle_url, oracle_user, oracle_pass); // creates connection for Oracle
 
 	public static void main(String[] args){}
 	

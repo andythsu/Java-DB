@@ -28,7 +28,7 @@ public class OracleActivity extends DBActivity{
 	 * @param password
 	 * @return
 	 */
-	public static OracleActivity create(String url, String username, String password) {
+	public static OracleActivity connect(String url, String username, String password) {
 		String driver = "oracle.jdbc.driver.OracleDriver";
 		return new OracleActivity(url, username, password, driver);
 	}

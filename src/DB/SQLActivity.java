@@ -28,7 +28,7 @@ public class SQLActivity extends DBActivity{
 	 * @param password
 	 * @return
 	 */
-	public static SQLActivity create(String url, String username, String password) {
+	public static SQLActivity connect(String url, String username, String password) {
 		String driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 		return new SQLActivity(url, username, password, driver);
 	}
