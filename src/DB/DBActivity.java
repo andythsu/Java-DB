@@ -25,13 +25,83 @@ public abstract class DBActivity extends DBConnection {
 	public DBActivity(String url, String username, String password, String driver) {
 		super(url, username, password, driver);
 	}
-	
+
 	public abstract ResultSet executeQuery(String sql);	
 
 	public abstract int executeUpdate(String sql);
 
 	public abstract ResultSet select(String tableName, String[] choices, Object[][] conditions, String logic);
+
+	// batch delete
+	public int[] delete(String tableName, String[] keys, Object[][] values, String condition) {
+		checkConnection();
+		String sql = "DELETE FROM " + tableName + " WHERE ";
+		sql += generateConditionForDelete(keys, condition);
+		PreparedStatement ps = null;
+		try {
+			ps = con.prepareStatement(sql);
+			for(int i=0; i<values.length; i++) {
+				for(int j=0; j<values[i].length; j++) {
+					Object value = values[i][j];
+					if (value instanceof Integer) {
+						ps.setInt(j + 1, (int) value);
+					} else if (value instanceof String) {
+						ps.setString(j + 1, (String) value);
+					} else if (value instanceof Boolean) {
+						ps.setBoolean(j + 1, (boolean) value);
+					} else if (value instanceof Double) {
+						ps.setDouble(j + 1, (Double) value);
+					}
+				}
+				ps.addBatch();
+			}
+			return ps.executeBatch();
+		}catch (SQLException e) {
+			System.out.println("error in deleting");
+			return null;
+		} finally {
+			close(ps, null, null, null);
+		}
+	}
 	
+	
+	/**
+	 * single delete
+	 * @param tableName
+	 * @param keys
+	 * @param values
+	 * @param condition
+	 * @return
+	 */
+	public int delete(String tableName, String[] keys, Object[] values, String condition) {
+		checkConnection();
+		String sql = "DELETE FROM " + tableName + " WHERE ";
+		sql += generateConditionForDelete(keys, condition);
+		PreparedStatement ps = null;
+		try {
+			ps = con.prepareStatement(sql);
+			for(int i=0; i<values.length; i++) {
+				Object value = values[i];
+				if (value instanceof Integer) {
+					ps.setInt(i + 1, (int) value);
+				} else if (value instanceof String) {
+					ps.setString(i + 1, (String) value);
+				} else if (value instanceof Boolean) {
+					ps.setBoolean(i + 1, (boolean) value);
+				} else if (value instanceof Double) {
+					ps.setDouble(i + 1, (Double) value);
+				}
+			}
+			return ps.executeUpdate();
+		}catch (SQLException e) {
+			System.out.println("error in deleting");
+			return -1;
+		} finally {
+			close(ps, null, null, null);
+		}
+	}
+
+
 	/**
 	 * batch update, can only have 1 condition. ex: update (table) set (field) = (?) where (field) = (value)
 	 * @param tableName
@@ -61,7 +131,7 @@ public abstract class DBActivity extends DBConnection {
 					} else if (value instanceof Double) {
 						ps.setDouble(j + 1, (Double) value);
 					}
-					
+
 					// for the WHERE clause
 					if ((j+1) == values[i].length) {
 						ps.setString(j+2, condition_vals[i]);
@@ -78,7 +148,7 @@ public abstract class DBActivity extends DBConnection {
 			close(ps, null, null, null);
 		}
 	}
-	
+
 
 	/**
 	 * single update, can have multiple conditions. ex: update (table) set (field) = (?) where (field) = (value) OR/AND (field2) = (value2) ...
@@ -128,7 +198,7 @@ public abstract class DBActivity extends DBConnection {
 		close(null, null, null, this.con);
 	}
 
-	
+
 	// single insert
 	public int[] insert(String tableName, String[] keys, Object[] values) {
 		checkConnection();
@@ -195,8 +265,8 @@ public abstract class DBActivity extends DBConnection {
 			close(ps, null, null, null);
 		}
 	}
-	
-	
+
+
 	/**
 	 * SQL approach to get row count
 	 * @param tableName
@@ -249,7 +319,21 @@ public abstract class DBActivity extends DBConnection {
 		}
 		return rtn;
 	}
-	
+
+	/**
+	 * @param keys
+	 * @param condition
+	 * @return
+	 */
+	private String generateConditionForDelete(String[] keys, String condition) {
+		String rtn = "";
+		for(int i=0; i<keys.length; i++) {
+			if(i > 0) rtn += " " + condition + " ";
+			rtn += keys[i] + "= ?";
+		}
+		return null;
+	}
+
 	/**
 	 * @param keys
 	 * @param question_mark
@@ -265,7 +349,7 @@ public abstract class DBActivity extends DBConnection {
 		return rtn;
 	}
 
-	protected String generateValuesInParenthesis(Object[] keys, boolean includeQuestionMark) {
+	protected String generateValuesInParenthesis(String[] keys, boolean includeQuestionMark) {
 		String rtn = "";
 		if (includeQuestionMark) {
 			for (int i = 0; i < keys.length; i++) {
@@ -282,7 +366,7 @@ public abstract class DBActivity extends DBConnection {
 		}
 		return (String) rtn;
 	}
-	
+
 	/**
 	 * Close all existing connections
 	 * @param ps
