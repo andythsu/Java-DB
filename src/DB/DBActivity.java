@@ -66,7 +66,7 @@ public abstract class DBActivity extends DBConnection {
 	
 	
 	/**
-	 * single delete
+	 * single delete. ex: delete from (tableName) where (field) = (value)
 	 * @param tableName
 	 * @param keys
 	 * @param values
@@ -115,7 +115,7 @@ public abstract class DBActivity extends DBConnection {
 		String sql = "UPDATE " + tableName + " SET ";
 		sql += generateValuesForUpdate(keys);
 		sql += " WHERE ";
-		sql += condition_field + "=?";
+		sql += condition_field + "= ?";
 		PreparedStatement ps = null;
 		try {
 			ps = con.prepareStatement(sql);
