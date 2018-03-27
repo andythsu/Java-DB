@@ -105,7 +105,7 @@ public class OracleActivity extends DBActivity{
 			st = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 			return st.executeQuery(sql);
 		} catch (SQLException e) {
-			System.out.println("error in SQL: " + e.getMessage().toString());
+			e.printStackTrace();
 			return null;
 		}
 	}

@@ -32,7 +32,14 @@ public abstract class DBActivity extends DBConnection {
 
 	public abstract ResultSet select(String tableName, String[] choices, Object[][] conditions, String logic);
 
-	// batch delete
+	/**
+	 * batch delete
+	 * @param tableName
+	 * @param keys
+	 * @param values
+	 * @param condition
+	 * @return
+	 */
 	public int[] delete(String tableName, String[] keys, Object[][] values, String condition) {
 		checkConnection();
 		String sql = "DELETE FROM " + tableName + " WHERE ";
@@ -94,7 +101,7 @@ public abstract class DBActivity extends DBConnection {
 			}
 			return ps.executeUpdate();
 		}catch (SQLException e) {
-			System.out.println("error in deleting");
+			e.printStackTrace();
 			return -1;
 		} finally {
 			close(ps, null, null, null);
@@ -139,7 +146,6 @@ public abstract class DBActivity extends DBConnection {
 				}
 				ps.addBatch();
 			}
-			System.out.println("finished updating");
 			return ps.executeBatch();
 		}catch(SQLException e) {
 			e.printStackTrace();
@@ -180,7 +186,6 @@ public abstract class DBActivity extends DBConnection {
 					ps.setDouble(i + 1, (Double) value);
 				}
 			}
-			System.out.println("finished updating");
 			return ps.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println("error in updating");
@@ -331,7 +336,7 @@ public abstract class DBActivity extends DBConnection {
 			if(i > 0) rtn += " " + condition + " ";
 			rtn += keys[i] + "= ?";
 		}
-		return null;
+		return rtn;
 	}
 
 	/**
