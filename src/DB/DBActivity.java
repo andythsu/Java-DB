@@ -188,7 +188,7 @@ public abstract class DBActivity extends DBConnection {
 			}
 			return ps.executeUpdate();
 		} catch (SQLException e) {
-			System.out.println("error in updating");
+			e.printStackTrace();
 			return -1;
 		} finally {
 			close(ps, null, null, null);
