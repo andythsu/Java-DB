@@ -201,6 +201,7 @@ public abstract class DBActivity extends DBConnection {
 	 */
 	public void close() {
 		close(null, null, null, this.con);
+		System.out.println("connection has been closed");
 	}
 
 
@@ -280,6 +281,23 @@ public abstract class DBActivity extends DBConnection {
 	 */
 	public int getRowCount(String tableName) throws SQLException{
 		String sql = "select count(*) AS cnt from " + tableName;
+		ResultSet r = executeQuery(sql);
+		String totalCount = "0";
+		while(r.next()) {
+			totalCount = r.getString("cnt");
+		}
+		return Integer.parseInt(totalCount);
+	}
+	
+	/**
+	 * Adds a condition to getRowCount
+	 * @param tableName
+	 * @param condition
+	 * @return
+	 * @throws SQLException
+	 */
+	public int getRowCount(String tableName, String condition) throws SQLException{
+		String sql = "select count(*) AS cnt from " + tableName + " WHERE " + condition;
 		ResultSet r = executeQuery(sql);
 		String totalCount = "0";
 		while(r.next()) {
