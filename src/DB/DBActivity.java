@@ -272,15 +272,36 @@ public abstract class DBActivity extends DBConnection {
 		}
 	}
 
-
 	/**
-	 * SQL approach to get row count
-	 * @param tableName
+	 * getRowCount with a direct SQL statement
+	 * @param statement
 	 * @return
 	 * @throws SQLException
 	 */
-	public int getRowCount(String tableName) throws SQLException{
-		String sql = "select count(*) AS cnt from " + tableName;
+	public int getRowCount(String statement) throws SQLException{
+		String sql = statement;
+		ResultSet r = executeQuery(sql);
+		String totalCount = "0";
+		while(r.next()) {
+			totalCount = r.getString(1);
+		}
+		return Integer.parseInt(totalCount);
+	}
+	
+	/**
+	 * getRowCount without condition statement
+	 * @param tableName
+	 * @param field
+	 * @return
+	 * @throws SQLException
+	 */
+	public int getRowCount(String tableName, String field) throws SQLException{
+		String sql = "";
+		if(field == null) {
+			sql = "select count(*) AS cnt from " + tableName;		
+		}else {
+			sql = "select count("+field+") AS cnt from " + tableName;		
+		}
 		ResultSet r = executeQuery(sql);
 		String totalCount = "0";
 		while(r.next()) {
@@ -289,15 +310,22 @@ public abstract class DBActivity extends DBConnection {
 		return Integer.parseInt(totalCount);
 	}
 	
+	
 	/**
-	 * Adds a condition to getRowCount
+	 * getRowCount with condition statement
 	 * @param tableName
+	 * @param field
 	 * @param condition
 	 * @return
 	 * @throws SQLException
 	 */
-	public int getRowCount(String tableName, String condition) throws SQLException{
-		String sql = "select count(*) AS cnt from " + tableName + " WHERE " + condition;
+	public int getRowCount(String tableName, String field, String condition) throws SQLException{
+		String sql = "";
+		if(field == null) {
+			sql = "select count(*) AS cnt from " + tableName + " WHERE " + condition;			
+		}else {
+			sql = "select count("+field+") AS cnt from " + tableName + " WHERE " + condition;			
+		}
 		ResultSet r = executeQuery(sql);
 		String totalCount = "0";
 		while(r.next()) {
