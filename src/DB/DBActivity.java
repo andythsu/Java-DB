@@ -12,6 +12,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 
+import oracle.sql.DATE;
+
 /**
  * Can perform DB activities (insert, delete, select ...)
  */
@@ -202,6 +204,7 @@ public abstract class DBActivity extends DBConnection {
 	public void close() {
 		close(null, null, null, this.con);
 		System.out.println("connection has been closed");
+		System.out.println("current time: " + new java.util.Date().toString());
 	}
 
 
