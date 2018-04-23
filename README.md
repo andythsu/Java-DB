@@ -16,7 +16,9 @@ The methods are the same for each instance. Will use sql as an example for the f
 `int[] result = sql.insert(String tableName, String[] keys, Object[] values);`
 
 > tableName = the table name in the DB
+
 > Keys = the column you want to insert into
+
 > Values = the new values associated with the column
 > 
 
@@ -32,13 +34,21 @@ The methods are the same for each instance. Will use sql as an example for the f
 `int result = sql.update(String tableName, String [] keys, Object[] values, String[][] condition, String intermediate);`
 
 > tableName = the table name in the DB
+
 > Keys = the column you want to update
+
 > Values = the new value associated with the column
+
 > Condition = the "WHERE CLAUSE".
+
 > Intermediate = the conjunction when you have more than  1 condition
+
 > for example: 
+
 > SQL: update ...  where ID = 50 AND ID_2 = 100
+
 > you would put condition = new String[][]{{"ID", "50"}, {"ID_2", "100"}} 
+
 > intermediate = "AND"
 > 
 
@@ -47,6 +57,7 @@ The methods are the same for each instance. Will use sql as an example for the f
 `int[] results = sql.update(String tableName, String[] keys, Object[][] values, String condition_field, String[] condition_vals)`
 
 > Values = 2D array to take in more than 1 pair of values to update
+
 > Condition_vals = an array to take in different condition values.
 > 
 
@@ -55,12 +66,19 @@ The methods are the same for each instance. Will use sql as an example for the f
 `int result = sql.delete(String tableName, String[] keys, Object[] values, String condition)`
 
 > tableName = the table name in DB
+
 > keys = condition column in the WHERE CLAUSE
+
 > values = the value associated with the column
+
 > condition = intermediate if you have more than 1 key
+
 > for example: delete from table where A = 5 AND B = 6
+
 > keys = new String[]{"A", "B"}
+
 > values = new Object[]{"5", "6"}
+
 > condition = "AND"
 > 
 
@@ -76,12 +94,19 @@ The methods are the same for each instance. Will use sql as an example for the f
 `ResultSet r = sql.select(String tableName, String[] choices, Object[][] conditions, String logic)`
 
 > tableName = table name in DB
+
 > choices = the columns you want to select
+
 > conditions = WHERE clause
+
 > logic = "AND" or "OR"
+
 > for example: select A from table where id=5 AND id_2 = 6
+
 > choices = new String[]{"A"}
+
 > conditions = new Object[][]{{"ID", "5"}, {"ID_2","6"}}
+
 > logic = "AND"
 >  
 
@@ -97,6 +122,7 @@ OR
 `int totalRows = sql.getRowCount(String statement);`
 
 > statement is the complete SQL.
+
 > for example: select count(*) from table ...
 > 
 
