@@ -6,18 +6,27 @@ Depending on the type of connections you need (SQL Server or Oracle) call either
 The methods are the same for each instance. Will use sql as an example for the following code.
 
 **Usage:**
+
 <u>To insert single record:</u>
+
 `int[] result = sql.insert(String tableName, String[] keys, Object[] values);`
+
 > tableName = the table name in the DB
 > Keys = the column you want to insert into
 > Values = the new values associated with the column
 > 
+
 <u>To insert multiple records: </u>
+
 `int[] results = sql.insert(String tableName, String[] keys, Object[][] values);`
+
 > Values = 2D array to take more than 1 pair values to insert
 >
+
 <u>To update single record:</u>
+
 `int result = sql.update(String tableName, String [] keys, Object[] values, String[][] condition, String intermediate);`
+
 > tableName = the table name in the DB
 > Keys = the column you want to update
 > Values = the new value associated with the column
