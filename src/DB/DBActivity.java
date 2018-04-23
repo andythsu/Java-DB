@@ -112,7 +112,7 @@ public abstract class DBActivity extends DBConnection {
 
 
 	/**
-	 * batch update, can only have 1 condition. ex: update (table) set (field) = (?) where (field) = (value)
+	 * batch update, can only have 1 condition_field, but can have multiple condition_values ex: update (table) set (field) = (?) where (condition_field) = (condition_value)
 	 * @param tableName
 	 * @param keys
 	 * @param values
