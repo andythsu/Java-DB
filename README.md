@@ -121,7 +121,7 @@ OR
 
 `int totalRows = sql.getRowCount(String statement);`
 
-> statement is the complete SQL.
+> statement is the complete SQL query
 
 > for example: select count(*) from table ...
 > 
